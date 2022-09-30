@@ -15,10 +15,24 @@ def send_sequence(pi, message):
         pi.write(GPIO_TRANSMITTER_NUMBER, int(bit))
         time.sleep(clockspeed)
 
+def add_bit_stuffing(message, n):
+    # n is the length of a repeating bit sequence before adding in a stuff bit
+    answer = ""
+    n_buffer = " "
+    for bit in message:
+        if bit != n_buffer[-1]:
+            n_buffer = bit
+            answer += bit
+        else:
+            n_buffer += bit
+            answer += bit
+            if len(n_buffer) == n:
+                answer += str((1-int(n_buffer[-1])))
+                n_buffer = " "
+    return answer
+            
 def transmit_message(message):
     pi = pigpio.pi()
-
     sequence = wake + start + message + stop
-
-    send_sequence(pi, sequence)
-
+    bit_stuffed_sequence = add_bit_stuffing(sequence, 5)
+    send_sequence(pi, bit_stuffed_sequence)
